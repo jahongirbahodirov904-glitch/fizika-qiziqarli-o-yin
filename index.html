@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fizika Interaktiv O'yini - Bahodirov Jahongir</title>
+    <style>
+        :root {
+            --primary-left: #3b82f6;
+            --primary-right: #ef4444;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: linear-gradient(90deg, #1e3a8a, #7f1d1d);
+            padding: 10px 20px;
+            text-align: center;
+            border-bottom: 3px solid #475569;
+            z-index: 10;
+        }
+        header h1 {
+            font-size: 22px;
+            color: #fca5a5;
+        }
+        header p {
+            font-size: 14px;
+            color: #cbd5e1;
+            margin-top: 4px;
+        }
+        .setup-screen {
+            position: absolute;
+            top: 60px; left: 0; right: 0; bottom: 0;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 20px;
+        }
+        .btn-start {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 20px;
+        }
+        .btn-start:hover { transform: scale(1.05); }
+        .pair-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .pair-card {
+            background: var(--card-dark);
+            border: 2px solid #475569;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .pair-card.active {
+            border-color: #10b981;
+            background: #064e3b;
+        }
+        .game-container {
+            display: flex;
+            flex: 1;
+            position: relative;
+        }
+        .split-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            position: relative;
+            justify-content: space-between;
+        }
+        .left-side { border-right: 4px dashed #475569; background: #0f172a; }
+        .right-side { background: #111827; }
+        .side-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+        }
+        .team-title { font-size: 24px; font-weight: bold; }
+        .left-side .team-title { color: var(--primary-left); }
+        .right-side .team-title { color: var(--primary-right); }
+        .score-board { font-size: 22px; font-weight: bold; }
+        .progress-indicator { font-size: 16px; color: #94a3b8; }
+        .timer-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #334155;
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 1s linear;
+        }
+        .left-side .timer-bar { background: var(--primary-left); }
+        .right-side .timer-bar { background: var(--primary-right); }
+        .question-box {
+            background: var(--card-dark);
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            line-height: 1.5;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            flex: 1;
+            max-height: 300px;
+        }
+        .option-btn {
+            background: #334155;
+            border: 2px solid #475569;
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .option-btn:hover { background: #475569; }
+        .option-btn.correct { background: #10b981 !important; border-color: #34d399; }
+        .option-btn.wrong { background: #ef4444 !important; border-color: #f87171; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+        .status-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+        .result-screen {
+            position: absolute;
+            top: 60px; left: 0; right: 0; bottom: 0;
+            background: var(--bg-dark);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+        }
+        .result-box {
+            background: var(--card-dark);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 600px;
+            border: 2px solid #475569;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FIZIKA INTERAKTIV SHOU-VIKTORINASI</h1>
+        <p>Tayyorlovchi: 8-D sinf o'quvchisi — <strong>Bahodirov Jahongir</strong></p>
+    </header>
+
+    <div class="setup-screen" id="setupScreen">
+        <h2 style="margin-bottom: 20px;">O'yin Juftligini Tanlang (Jami 6 juftlik, 12 o'quvchi)</h2>
+        <div class="pair-selector" id="pairSelector"></div>
+        <button class="btn-start" onclick="startGame()">O'yinni Boshlash</button>
+    </div>
+
+    <div class="game-container">
+        <!-- CHAP TARAF - KOMANDA A -->
+        <div class="split-side left-side" id="leftSide">
+            <div class="side-header">
+                <div class="team-title">KOMANDA A</div>
+                <div class="score-board">Ball: <span id="scoreA">0</span></div>
+                <div class="progress-indicator">Savol: <span id="progressA">1/10</span></div>
+            </div>
+            <div class="timer-bar-container">
+                <div class="timer-bar" id="timerBarA"></div>
+            </div>
+            <div class="question-box" id="qBoxA">Savol yuklanmoqda...</div>
+            <div class="options-grid" id="optionsA"></div>
+            <div class="status-overlay" id="overlayA" style="display:none;">Tayyor...</div>
+        </div>
+
+        <!-- O'NG TARAF - KOMANDA B -->
+        <div class="split-side right-side" id="rightSide">
+            <div class="side-header">
+                <div class="team-title">KOMANDA B</div>
+                <div class="score-board">Ball: <span id="scoreB">0</span></div>
+                <div class="progress-indicator">Savol: <span id="progressB">1/10</span></div>
+            </div>
+            <div class="timer-bar-container">
+                <div class="timer-bar" id="timerBarB"></div>
+            </div>
+            <div class="question-box" id="qBoxB">Savol yuklanmoqda...</div>
+            <div class="options-grid" id="optionsB"></div>
+            <div class="status-overlay" id="overlayB" style="display:none;">Tayyor...</div>
+        </div>
+    </div>
+
+    <div class="result-screen" id="resultScreen">
+        <div class="result-box">
+            <h2 style="color: #10b981; font-size: 32px; margin-bottom: 15px;">O'yin Yakunlandi!</h2>
+            <p id="pairWinner" style="font-size: 22px; margin-bottom: 25px;"></p>
+            <div style="display: flex; justify-content: space-around; margin-bottom: 30px;">
+                <div>
+                    <h3 style="color: var(--primary-left);">Komanda A</h3>
+                    <p style="font-size: 28px; font-weight:bold;" id="finalA">0</p>
+                </div>
+                <div>
+                    <h3 style="color: var(--primary-right);">Komanda B</h3>
+                    <p style="font-size: 28px; font-weight:bold;" id="finalB">0</p>
+                </div>
+            </div>
+            <button class="btn-start" onclick="resetToMenu()">Bosh menyuga qaytish</button>
+        </div>
+    </div>
+
+    <script>
+        // 24 ta noyob fizika savollari (8-sinf darajasi)
+        const questionPool = [
+            { q: "Modda zarralarining betartib tartibsiz harakati nima deb ataladi?", o: ["Braun harakati", "Diffuziya", "Konveksiya", "Issiqlik o'tkazuvchanlik"], a: 0 },
+            { q: "Selsiy shkalasi bo'yicha muzlash nuqtasi necha daraja qilib olingan?", o: ["100 °C", "0 °C", "-273 °C", "32 °C"], a: 1 },
+            { q: "Gazlar berilgan hajmni qanday egallaydi?", o: ["Faqat pastki qismini", "Faqat yuqori qismini", "Butun hajmini to'liq", "Hajmga qarab yarmigacha"], a: 2 },
+            { q: "Modda qizdirilganda uning zarrachalari tezligi qanday o'zgaradi?", o: ["Kamayadi", "O'zgarmaydi", "Ortadi", "To'xtaydi"], a: 2 },
+            { q: "Issiqlik miqdorini o'lchash birligi nima?", o: ["Nyuton", "Joul", "Paskal", "Vatt"], a: 1 },
+            { q: "Qaysi holatda modda shaklni saqlamaydi, lekin hajmni saqlaydi?", o: ["Qattiq", "Suyuq", "Gaz", "Plazma"], a: 1 },
+            { q: "Diffuziya jarayoni qaysi holatda eng tez sodir bo'ladi?", o: ["Qattiq jismlarda", "Suyuqliklarda", "Gazlarda", "Barchasida bir xil"], a: 2 },
+            { q: "Suyuqlikning bug'lanishi qaysi yuzada tezroq bo'ladi?", o: ["Kichik yuzada", "Katta yuzada", "Yuzaga bog'liq emas", "Faqat issiqda"], a: 1 },
+            { q: "Issiqlik o'tkazuvchanlik eng yaxshi qaysi moddada?", o: ["Yog'och", "Havo", "Metall", "Plastik"], a: 2 },
+            { q: "Qaysi jarayon issiqlikni o'tkazishda ishtirok etmaydi?", o: ["Konveksiya", "Diffuziya", "Nurlanish", "Issiqlik o'tkazuvchanlik"], a: 1 },
+            { q: "Suvning qaynash nuqtasi normal sharoitda necha gradus?", o: ["0 °C", "50 °C", "100 °C", "212 °C"], a: 2 },
+            { q: "Zarracha massasi qancha katta bo'lsa, uning issiqlik harakati tezligi qanday?", o: ["Katta", "Kichik", "O'zgarmaydi", "To'xtaydi"], a: 1 },
+            { q: "Qaysi holatda molekulyar kuchlar eng kuchli?", o: ["Gaz", "Suyuqlik", "Qattiq jism", "Barchasida bir xil"], a: 2 },
+            { q: "Issiqlik kengayishi nima?", o: ["Moddaning sovishi", "Moddaning qizishi natijasida hajmining ortishi", "Zarracha tezligining kamayishi", "Hajmning kamayishi"], a: 1 },
+            { q: "Termometr ishlash printsipi nima asosida?", o: ["Issiqlik kengayishi", "Diffuziya", "Konveksiya", "Nurlanish"], a: 0 },
+            { q: "Qaysi gaz eng yengil?", o: ["Kislorod", "Azot", "Vodorod", "Uglerod dioksidi"], a: 2 },
+            { q: "Suyuqlikning yuza tarangligi nima tufayli yuzaga keladi?", o: ["Molekulalar orasidagi tortishish", "Yer tortishishi", "Havo bosimi", "Issiqlik"], a: 0 },
+            { q: "Kapillyarlik hodisasi qayerda kuzatiladi?", o: ["Faqat gazlarda", "Ingichka naychalarda", "Katta idishlarda", "Vakuumda"], a: 1 },
+            { q: "Qaysi jism eng yaxshi issiqlik izolyatori?", o: ["Mis", "Temir", "Yog'och", "Alyuminiy"], a: 2 },
+            { q: "Nurlanish orqali issiqlik uzatish uchun nima kerak?", o: ["Muhit", "Hech narsa (vakuumda ham)", "Suyuqlik", "Gaz"], a: 1 },
+            { q: "Qaysi jarayon issiqlik yutilishini bildiradi?", o: ["Erish", "Qotish", "Kondensatsiya", "Bug'lanish"], a: 0 },
+            { q: "Suvning eng katta zichligi necha gradusda?", o: ["0 °C", "4 °C", "100 °C", "-4 °C"], a: 1 },
+            { q: "Qaysi holatda modda shakl va hajmni saqlaydi?", o: ["Suyuq", "Gaz", "Qattiq", "Plazma"], a: 2 },
+            { q: "Issiqlik miqdori qanday formuladan topiladi? (Q = ...)", o: ["m · c · Δt", "F · s", "m · v", "ρ · V"], a: 0 }
+        ];
+
+        // Juftliklar (6 juftlik)
+        const pairs = [
+            { id: 1, name: "1-juftlik", a: "O'quvchi 1", b: "O'quvchi 2" },
+            { id: 2, name: "2-juftlik", a: "O'quvchi 3", b: "O'quvchi 4" },
+            { id: 3, name: "3-juftlik", a: "O'quvchi 5", b: "O'quvchi 6" },
+            { id: 4, name: "4-juftlik", a: "O'quvchi 7", b: "O'quvchi 8" },
+            { id: 5, name: "5-juftlik", a: "O'quvchi 9", b: "O'quvchi 10" },
+            { id: 6, name: "6-juftlik", a: "O'quvchi 11", b: "O'quvchi 12" }
+        ];
+
+        let selectedPair = null;
+        let scoreA = 0, scoreB = 0;
+        let currentQIndexA = 0, currentQIndexB = 0;
+        let questionsA = [], questionsB = [];
+        let timerA = null, timerB = null;
+        let timeLeftA = 20, timeLeftB = 20;
+        const TIME_LIMIT = 20; // soniya
+        const TOTAL_QUESTIONS = 10;
+
+        // Juftliklarni chiqarish
+        function initPairs() {
+            const selector = document.getElementById('pairSelector');
+            selector.innerHTML = '';
+            pairs.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'pair-card';
+                card.textContent = p.name;
+                card.onclick = () => {
+                    document.querySelectorAll('.pair-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    selectedPair = p;
+                };
+                selector.appendChild(card);
+            });
+        }
+
+        // O'yinni boshlash
+        function startGame() {
+            if (!selectedPair) {
+                alert("Iltimos, avval juftlikni tanlang!");
+                return;
+            }
+
+            // Savollarni aralashtirish va 10 tadan ajratish
+            const shuffled = [...questionPool].sort(() => Math.random() - 0.5);
+            questionsA = shuffled.slice(0, TOTAL_QUESTIONS);
+            questionsB = shuffled.slice(TOTAL_QUESTIONS, TOTAL_QUESTIONS * 2);
+
+            scoreA = 0; scoreB = 0;
+            currentQIndexA = 0; currentQIndexB = 0;
+
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('scoreA').textContent = '0';
+            document.getElementById('scoreB').textContent = '0';
+
+            // Komanda nomlarini yangilash
+            document.querySelector('#leftSide .team-title').textContent = `KOMANDA A (${selectedPair.a})`;
+            document.querySelector('#rightSide .team-title').textContent = `KOMANDA B (${selectedPair.b})`;
+
+            loadQuestion('A');
+            loadQuestion('B');
+        }
+
+        // Savol yuklash
+        function loadQuestion(side) {
+            const isA = side === 'A';
+            const qIndex = isA ? currentQIndexA : currentQIndexB;
+            const questions = isA ? questionsA : questionsB;
+            const qBox = document.getElementById(isA ? 'qBoxA' : 'qBoxB');
+            const optionsDiv = document.getElementById(isA ? 'optionsA' : 'optionsB');
+            const progress = document.getElementById(isA ? 'progressA' : 'progressB');
+            const overlay = document.getElementById(isA ? 'overlayA' : 'overlayB');
+
+            if (qIndex >= TOTAL_QUESTIONS) {
+                checkGameEnd();
+                return;
+            }
+
+            const q = questions[qIndex];
+            qBox.textContent = q.q;
+            progress.textContent = `${qIndex + 1}/${TOTAL_QUESTIONS}`;
+            optionsDiv.innerHTML = '';
+
+            q.o.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = `${String.fromCharCode(65 + i)}) ${opt}`;
+                btn.onclick = () => checkAnswer(side, i, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            overlay.style.display = 'none';
+            startTimer(side);
+        }
+
+        // Javobni tekshirish
+        function checkAnswer(side, chosen, btn) {
+            const isA = side === 'A';
+            const questions = isA ? questionsA : questionsB;
+            const qIndex = isA ? currentQIndexA : currentQIndexB;
+            const correct = questions[qIndex].a;
+            const options = document.getElementById(isA ? 'optionsA' : 'optionsB').querySelectorAll('.option-btn');
+
+            // Timer to'xtatish
+            clearInterval(isA ? timerA : timerB);
+
+            options.forEach(b => b.disabled = true);
+
+            if (chosen === correct) {
+                btn.classList.add('correct');
+                if (isA) {
+                    scoreA += 10;
+                    document.getElementById('scoreA').textContent = scoreA;
+                } else {
+                    scoreB += 10;
+                    document.getElementById('scoreB').textContent = scoreB;
+                }
+            } else {
+                btn.classList.add('wrong');
+                options[correct].classList.add('correct');
+            }
+
+            // Keyingi savolga o'tish
+            setTimeout(() => {
+                if (isA) currentQIndexA++;
+                else currentQIndexB++;
+                loadQuestion(side);
+            }, 1500);
+        }
+
+        // Timer
+        function startTimer(side) {
+            const isA = side === 'A';
+            let timeLeft = TIME_LIMIT;
+            const bar = document.getElementById(isA ? 'timerBarA' : 'timerBarB');
+            bar.style.width = '100%';
+
+            clearInterval(isA ? timerA : timerB);
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                bar.style.width = `${(timeLeft / TIME_LIMIT) * 100}%`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    // Vaqt tugasa avtomatik o'tkazib yuborish
+                    const options = document.getElementById(isA ? 'optionsA' : 'optionsB').querySelectorAll('.option-btn');
+                    options.forEach(b => b.disabled = true);
+                    const correct = (isA ? questionsA : questionsB)[isA ? currentQIndexA : currentQIndexB].a;
+                    options[correct].classList.add('correct');
+
+                    setTimeout(() => {
+                        if (isA) currentQIndexA++;
+                        else currentQIndexB++;
+                        loadQuestion(side);
+                    }, 1500);
+                }
+            }, 1000);
+
+            if (isA) timerA = interval;
+            else timerB = interval;
+        }
+
+        // O'yin tugashini tekshirish
+        function checkGameEnd() {
+            if (currentQIndexA >= TOTAL_QUESTIONS && currentQIndexB >= TOTAL_QUESTIONS) {
+                document.getElementById('finalA').textContent = scoreA;
+                document.getElementById('finalB').textContent = scoreB;
+
+                let winnerText = '';
+                if (scoreA > scoreB) winnerText = `G'olib: ${selectedPair.a} (Komanda A)`;
+                else if (scoreB > scoreA) winnerText = `G'olib: ${selectedPair.b} (Komanda B)`;
+                else winnerText = "Durang!";
+
+                document.getElementById('pairWinner').textContent = winnerText;
+                document.getElementById('resultScreen').style.display = 'flex';
+            }
+        }
+
+        // Menyuga qaytish
+        function resetToMenu() {
+            clearInterval(timerA);
+            clearInterval(timerB);
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('setupScreen').style.display = 'flex';
+            selectedPair = null;
+            document.querySelectorAll('.pair-card').forEach(c => c.classList.remove('active'));
+        }
+
+        // Boshlash
+        initPairs();
+    </script>
+</body>
+</html>
